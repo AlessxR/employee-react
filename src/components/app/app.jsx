@@ -18,12 +18,14 @@ class App extends Component {
                 { name: "Alex C.", salary: 1500, increase: true, id: 2, rise: false },
                 { name: "Carl W.", salary: 2100, increase: true, id: 3, rise: true }
             ],
+            term: '',
+            filter: 'all'
         };
         this.maxId = 4;
     }
 
     deleteItem = (id) => {
-        this.setState(({data}) => {
+        this.setState(({ data }) => {
             // Сравниваем id с data с уникальным идентификатором который приходит нам с аргумента метода
             // const index = data.findIndex(elem => elem.id === id); // Если найдем такое совпадение, то будет индекс
             // const before = data.slice(0, index);
@@ -47,31 +49,16 @@ class App extends Component {
             id: this.maxId++
         }; // Создаём новый объект
 
-        this.setState(({data}) => ({
+        this.setState(({ data }) => ({
             data: [...data, newItem]
         }))
     }
 
-    // onToggleProp = (id) => {
-    //     this.setState(({data}) => ({
-    //         // Возвращаем новый объект со свойством data
-    //         data: data.map(item => {
-    //             // Если у нас совпали айдишники то мы нашли нужный элемент 
-    //             if (item.id === id) {
-    //                 return {
-    //                     ...item, increase: !item.increase // Возвращаем на данной итерации новый объект с такими данными, в котором increase поменялся на противоположное
-    //                 }
-    //             }
-    //             return item; // Или просто возвращаем объект
-    //         })
-    //     }));
-    // }
-
     onToggleProp = (id, prop) => {
-        this.setState(({data}) => ({
+        this.setState(({ data }) => ({
             data: data.map(item => {
                 if (item.id === id) {
-                    return {...item, [prop]: !item[prop]}
+                    return { ...item, [prop]: !item[prop] }
                 }
 
                 return item;
@@ -79,27 +66,61 @@ class App extends Component {
         }));
     }
 
-    // onToggleRise = (id) => {
-    //     console.log(`Rise this ${id}`);
-    // }
+    searchEmp = (items, term) => {
+        if (term.length === 0) {
+            return items;
+        }
+
+        return items.filter(elem => {
+            return elem.name.indexOf(term) > -1;
+        });
+    }
+
+    onUpdateSearch = (term) => {
+        this.setState({
+            term
+        });
+    }
+
+    filterPost = (items, filter) => {
+        switch(filter) {
+            case 'rise':
+                return items.filter(item => item.rise);
+            case 'moreThen1000':
+                return items.filter(item => item.salary > 1000);
+            default:
+                return items;
+        }
+    }
+
+    onFilterSelect = (filter) => {
+        this.setState({filter});
+    }
 
     render() {
+        const { data, term, filter } = this.state;
         const employee = this.state.data.length;
         const increase = this.state.data.filter(item => item.increase).length;
+        const visibleData = this.filterPost(this.searchEmp(data, term), filter);
+
+        
+
         return (
             <div className="app">
-                <AppInfo 
+                <AppInfo
                     numbersEmployee={employee}
                     increase={increase}
                 />
 
                 <div className="search-panel">
-                    <SearchPanel />
-                    <AppFilter />
+                    <SearchPanel
+                        onUpdateSearch={this.onUpdateSearch}
+                    />
+                    <AppFilter filter={filter} onFilterSelect={this.onFilterSelect} />
                 </div>
 
                 <EmployeeList
-                    data={this.state.data}
+                    data={visibleData}
                     onDelete={this.deleteItem}
                     onToggleProp={this.onToggleProp}
                 />
